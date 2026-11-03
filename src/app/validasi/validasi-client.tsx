@@ -13,6 +13,11 @@ import {
   Clock,
   Search,
   Filter,
+  Eye,
+  Image as ImageIcon,
+  ImageOff,
+  X,
+  Maximize2,
 } from 'lucide-react'
 
 export default function ValidasiClient({
@@ -31,6 +36,15 @@ export default function ValidasiClient({
   const [namaPenerima, setNamaPenerima] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+
+  // State untuk Modal Preview Foto Besar
+  const [previewImage, setPreviewImage] = useState<{
+    url: string
+    title: string
+    kategori?: string
+    deskripsi?: string
+    lokasi?: string
+  } | null>(null)
 
   const filteredReports = reports.filter((item) => {
     const matchTab =
@@ -98,6 +112,7 @@ export default function ValidasiClient({
         )
       )
       setMessage({ type: 'success', text: 'Status laporan berhasil disinkronisasi ke DB_ADMIN & DB_USER!' })
+
       setTimeout(() => {
         setSelectedReport(null)
         setActionType(null)
@@ -157,7 +172,7 @@ export default function ValidasiClient({
             <thead className="bg-[#F8FAFC] border-b border-slate-200 text-xs font-semibold text-[#475569]">
               <tr>
                 <th className="px-5 py-3.5">Jenis</th>
-                <th className="px-5 py-3.5">Barang & Kategori</th>
+                <th className="px-5 py-3.5">Barang, Foto & Kategori</th>
                 <th className="px-5 py-3.5">Lokasi & Tanggal</th>
                 <th className="px-5 py-3.5">Kontak Pelapor</th>
                 <th className="px-5 py-3.5">Status Publik</th>
@@ -174,6 +189,7 @@ export default function ValidasiClient({
               ) : (
                 filteredReports.map((report) => (
                   <tr key={report.id} className="hover:bg-slate-50/60 transition-colors">
+                    {/* Kolom Jenis Laporan */}
                     <td className="px-5 py-4 align-top">
                       <span
                         className={`px-2 py-0.5 rounded text-[11px] font-semibold ${
@@ -185,26 +201,90 @@ export default function ValidasiClient({
                         {report.jenis_laporan}
                       </span>
                     </td>
+
+                    {/* Kolom Barang & Foto */}
                     <td className="px-5 py-4 align-top">
-                      <div className="font-semibold text-[#0F172A]">{report.nama_barang}</div>
-                      <div className="text-xs text-[#475569] mt-0.5">Kategori: {report.kategori}</div>
-                      {report.deskripsi && (
-                        <p className="text-xs text-slate-500 mt-1 line-clamp-2 max-w-xs">
-                          {report.deskripsi}
-                        </p>
-                      )}
+                      <div className="flex items-start gap-3.5">
+                        {/* Thumbnail Foto */}
+                        {report.foto_barang_url ? (
+                          <div
+                            onClick={() =>
+                              setPreviewImage({
+                                url: report.foto_barang_url!,
+                                title: report.nama_barang,
+                                kategori: report.kategori,
+                                deskripsi: report.deskripsi,
+                                lokasi: report.lokasi,
+                              })
+                            }
+                            title="Klik untuk memperbesar gambar"
+                            className="relative group w-16 h-16 rounded-lg overflow-hidden border border-slate-200 bg-slate-100 shrink-0 cursor-pointer shadow-xs hover:border-brand-500 hover:ring-2 hover:ring-brand-500/20 transition-all"
+                          >
+                            <img
+                              src={report.foto_barang_url}
+                              alt={report.nama_barang}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                            />
+                            <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <Eye className="w-5 h-5 text-white drop-shadow" />
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="w-16 h-16 rounded-lg border border-dashed border-slate-200 bg-slate-50 flex flex-col items-center justify-center shrink-0 text-slate-400">
+                            <ImageOff className="w-5 h-5" />
+                            <span className="text-[10px] mt-1 text-slate-400 font-medium">No Foto</span>
+                          </div>
+                        )}
+
+                        {/* Detail Teks Barang */}
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-[#0F172A] leading-tight">
+                            {report.nama_barang}
+                          </div>
+                          <div className="text-xs text-[#475569] mt-0.5">
+                            Kategori: <span className="font-medium text-slate-700">{report.kategori}</span>
+                          </div>
+                          {report.deskripsi && (
+                            <p className="text-xs text-slate-500 mt-1 line-clamp-2 max-w-sm">
+                              {report.deskripsi}
+                            </p>
+                          )}
+                          {report.foto_barang_url && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setPreviewImage({
+                                  url: report.foto_barang_url!,
+                                  title: report.nama_barang,
+                                  kategori: report.kategori,
+                                  deskripsi: report.deskripsi,
+                                  lokasi: report.lokasi,
+                                })
+                              }
+                              className="inline-flex items-center gap-1 text-[11px] font-semibold text-brand-600 hover:text-brand-800 hover:underline mt-1.5"
+                            >
+                              <ImageIcon className="w-3.5 h-3.5" />
+                              Lihat Foto Penuh
+                            </button>
+                          )}
+                        </div>
+                      </div>
                     </td>
+
+                    {/* Kolom Lokasi & Tanggal */}
                     <td className="px-5 py-4 align-top text-xs text-[#475569]">
                       <div className="font-medium text-[#0F172A]">{report.lokasi}</div>
                       <div className="text-slate-400 mt-0.5 tabular-nums">{report.tanggal_kejadian}</div>
                     </td>
+
+                    {/* Kolom Kontak WhatsApp */}
                     <td className="px-5 py-4 align-top text-xs">
                       {report.no_wa_pelapor ? (
                         <a
                           href={`https://wa.me/${report.no_wa_pelapor.replace(/^0/, '62')}`}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center gap-1.5 text-emerald-700 font-medium hover:underline"
+                          className="inline-flex items-center gap-1.5 text-emerald-700 font-medium hover:underline bg-emerald-50/70 border border-emerald-200/60 px-2 py-1 rounded"
                         >
                           <MessageCircle className="w-3.5 h-3.5" />
                           {report.no_wa_pelapor}
@@ -213,9 +293,13 @@ export default function ValidasiClient({
                         <span className="text-slate-400">-</span>
                       )}
                     </td>
+
+                    {/* Kolom Status Publik */}
                     <td className="px-5 py-4 align-top">
                       <StatusBadge status={report.status_publik} />
                     </td>
+
+                    {/* Kolom Aksi Petugas */}
                     <td className="px-5 py-4 align-top text-right space-x-1.5 whitespace-nowrap">
                       {report.status_publik === 'Menunggu Verifikasi' && (
                         <button
@@ -264,10 +348,88 @@ export default function ValidasiClient({
         </div>
       </div>
 
-      {/* Modal Aksi Petugas */}
+      {/* MODAL 1: PREVIEW FOTO UKURAN BESAR (LIGHTBOX) */}
+      {previewImage && (
+        <div
+          onClick={() => setPreviewImage(null)}
+          className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-xl border border-slate-200 shadow-2xl max-w-2xl w-full overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-150"
+          >
+            {/* Modal Header */}
+            <div className="px-5 py-3.5 border-b border-slate-200 flex items-center justify-between bg-slate-50/70">
+              <div className="flex items-center gap-2">
+                <ImageIcon className="w-4 h-4 text-brand-600" />
+                <h3 className="text-sm font-bold text-[#0F172A] truncate max-w-sm">
+                  {previewImage.title}
+                </h3>
+                {previewImage.kategori && (
+                  <span className="text-[11px] px-2 py-0.5 rounded bg-slate-200 text-slate-700 font-medium">
+                    {previewImage.kategori}
+                  </span>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setPreviewImage(null)}
+                className="p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Gambar Besar */}
+            <div className="p-4 bg-slate-950/5 flex items-center justify-center overflow-auto max-h-[60vh]">
+              <img
+                src={previewImage.url}
+                alt={previewImage.title}
+                className="max-h-[55vh] w-auto max-w-full rounded-lg object-contain shadow-sm border border-slate-200/60"
+              />
+            </div>
+
+            {/* Keterangan & Footer */}
+            <div className="px-5 py-3.5 border-t border-slate-200 bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+              <div className="text-[#475569] space-y-0.5">
+                {previewImage.lokasi && (
+                  <div>
+                    <span className="font-semibold text-slate-700">Lokasi:</span> {previewImage.lokasi}
+                  </div>
+                )}
+                {previewImage.deskripsi && (
+                  <p className="text-slate-500 italic max-w-md line-clamp-2">
+                    &ldquo;{previewImage.deskripsi}&rdquo;
+                  </p>
+                )}
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <a
+                  href={previewImage.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-3 py-1.5 text-xs font-semibold rounded-md border border-slate-200 text-slate-700 hover:bg-slate-50 inline-flex items-center gap-1.5 transition-colors"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  Buka Tab Baru
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setPreviewImage(null)}
+                  className="px-3.5 py-1.5 text-xs font-semibold rounded-md bg-brand-600 text-white hover:bg-brand-700 transition-colors"
+                >
+                  Tutup
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 2: FORM AKSI PETUGAS POSKO */}
       {selectedReport && actionType && (
         <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg border border-slate-200 shadow-xl max-w-md w-full p-6 space-y-4 animate-in fade-in zoom-in-95 duration-150">
+          <div className="bg-white rounded-lg border border-slate-200 shadow-xl max-w-lg w-full p-6 space-y-4 animate-in fade-in zoom-in-95 duration-150">
             <div>
               <h3 className="text-base font-bold text-[#0F172A]">
                 Konfirmasi Aksi Petugas Posko
@@ -279,6 +441,38 @@ export default function ValidasiClient({
                 Status Baru: {actionType}
               </div>
             </div>
+
+            {/* Preview Foto Barang di dalam Modal Aksi (Bantu Petugas Memverifikasi) */}
+            {selectedReport.foto_barang_url && (
+              <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-md flex items-center gap-3">
+                <img
+                  src={selectedReport.foto_barang_url}
+                  alt={selectedReport.nama_barang}
+                  className="w-16 h-16 rounded object-cover border border-slate-200 shrink-0"
+                />
+                <div className="text-xs text-slate-600 min-w-0">
+                  <div className="font-semibold text-slate-800">Foto Bukti Pelapor</div>
+                  <div className="text-[11px] text-slate-500 truncate">
+                    Lokasi: {selectedReport.lokasi}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setPreviewImage({
+                        url: selectedReport.foto_barang_url!,
+                        title: selectedReport.nama_barang,
+                        kategori: selectedReport.kategori,
+                        deskripsi: selectedReport.deskripsi,
+                        lokasi: selectedReport.lokasi,
+                      })
+                    }
+                    className="text-brand-600 hover:underline text-[11px] font-medium mt-0.5 inline-flex items-center gap-1"
+                  >
+                    <Eye className="w-3 h-3" /> Perbesar Foto
+                  </button>
+                </div>
+              </div>
+            )}
 
             {message && (
               <div

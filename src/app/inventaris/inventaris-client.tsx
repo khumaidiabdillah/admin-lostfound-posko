@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { PoskoInventory } from '@/lib/types'
 import { addInventoryItemAction, updateClaimStatusAction } from './actions'
-import { Archive, Plus, CheckCircle2, MapPin, Calendar, User, Search } from 'lucide-react'
+import { Archive, Plus, CheckCircle2, MapPin, Calendar, User, Search, Eye, Image as ImageIcon, X, ExternalLink } from 'lucide-react'
 
 export default function InventarisClient({
   initialItems,
@@ -15,6 +15,7 @@ export default function InventarisClient({
   const [showForm, setShowForm] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [previewImage, setPreviewImage] = useState<{ url: string; title: string } | null>(null)
 
   // Form states
   const [namaBarang, setNamaBarang] = useState('')
@@ -72,31 +73,32 @@ export default function InventarisClient({
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-[#0F172A] tracking-tight">
-            Inventaris Fisik Posko Keamanan
+            Inventaris Fisik Posko
           </h1>
           <p className="text-sm text-[#475569] mt-1">
-            Daftar barang temuan yang diamankan di posko. Data disimpan di DB_ADMIN dan otomatis dipublikasikan ke portal publik.
+            Pencatatan barang temuan fisik yang diserahkan langsung oleh masyarakat ke posko keamanan.
           </p>
         </div>
+
         <button
           onClick={() => setShowForm(!showForm)}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold rounded-md transition-colors shadow-xs"
+          className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-brand-600 hover:bg-brand-700 rounded-md transition-colors shadow-xs"
         >
           <Plus className="w-4 h-4" />
-          {showForm ? 'Tutup Formulir' : 'Catat Barang Masuk'}
+          {showForm ? 'Tutup Formulir' : 'Input Barang Temuan'}
         </button>
       </div>
 
       {message && (
         <div
-          className={`p-4 rounded-lg text-xs font-semibold ${
+          className={`p-3.5 rounded-lg text-xs font-medium ${
             message.type === 'success'
-              ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-              : 'bg-rose-50 text-rose-800 border border-rose-200'
+              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+              : 'bg-rose-50 text-rose-700 border border-rose-200'
           }`}
         >
           {message.text}
@@ -260,7 +262,23 @@ export default function InventarisClient({
               ) : (
                 filteredItems.map((item) => (
                   <tr key={item.id} className="hover:bg-slate-50/60 transition-colors">
-                    <td className="px-5 py-3 font-semibold text-[#0F172A]">{item.nama_barang}</td>
+                    <td className="px-5 py-3 font-semibold text-[#0F172A]">
+                      <div className="flex items-center gap-3">
+                        {item.foto_url && (
+                          <div
+                            onClick={() => setPreviewImage({ url: item.foto_url!, title: item.nama_barang })}
+                            className="w-10 h-10 rounded-md overflow-hidden border border-slate-200 bg-slate-100 shrink-0 cursor-pointer hover:border-brand-500 transition-colors"
+                          >
+                            <img
+                              src={item.foto_url}
+                              alt={item.nama_barang}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        )}
+                        <span>{item.nama_barang}</span>
+                      </div>
+                    </td>
                     <td className="px-5 py-3 text-xs text-[#475569]">{item.kategori}</td>
                     <td className="px-5 py-3 text-xs text-[#475569]">{item.lokasi_ditemukan}</td>
                     <td className="px-5 py-3 text-xs text-[#475569] tabular-nums">
@@ -302,6 +320,54 @@ export default function InventarisClient({
           </table>
         </div>
       </div>
+
+      {/* Lightbox Preview */}
+      {previewImage && (
+        <div
+          onClick={() => setPreviewImage(null)}
+          className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-xl border border-slate-200 shadow-2xl max-w-xl w-full overflow-hidden flex flex-col max-h-[90vh]"
+          >
+            <div className="px-4 py-3 border-b border-slate-200 flex items-center justify-between bg-slate-50/70">
+              <span className="text-sm font-bold text-[#0F172A] truncate">{previewImage.title}</span>
+              <button
+                type="button"
+                onClick={() => setPreviewImage(null)}
+                className="p-1 rounded text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-4 bg-slate-950/5 flex items-center justify-center max-h-[60vh] overflow-auto">
+              <img
+                src={previewImage.url}
+                alt={previewImage.title}
+                className="max-h-[55vh] w-auto max-w-full rounded object-contain"
+              />
+            </div>
+            <div className="px-4 py-3 border-t border-slate-200 flex justify-end gap-2">
+              <a
+                href={previewImage.url}
+                target="_blank"
+                rel="noreferrer"
+                className="px-3 py-1.5 text-xs font-semibold rounded border border-slate-200 text-slate-700 hover:bg-slate-50 inline-flex items-center gap-1.5"
+              >
+                <ExternalLink className="w-3.5 h-3.5" /> Buka Tab Baru
+              </a>
+              <button
+                type="button"
+                onClick={() => setPreviewImage(null)}
+                className="px-3.5 py-1.5 text-xs font-semibold rounded bg-brand-600 text-white hover:bg-brand-700"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

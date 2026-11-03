@@ -185,7 +185,18 @@ export default async function DashboardPage() {
                           {item.jenis_laporan}
                         </span>
                       </td>
-                      <td className="px-5 py-3 font-medium text-[#0F172A]">{item.nama_barang}</td>
+                      <td className="px-5 py-3 font-medium text-[#0F172A]">
+                        <div className="flex items-center gap-2.5">
+                          {item.foto_barang_url && (
+                            <img
+                              src={item.foto_barang_url}
+                              alt={item.nama_barang}
+                              className="w-7 h-7 rounded object-cover border border-slate-200 shrink-0"
+                            />
+                          )}
+                          <span className="truncate max-w-[140px] sm:max-w-xs">{item.nama_barang}</span>
+                        </div>
+                      </td>
                       <td className="px-5 py-3 text-xs text-[#475569]">{item.kategori}</td>
                       <td className="px-5 py-3">
                         <StatusBadge status={item.status_publik} />
